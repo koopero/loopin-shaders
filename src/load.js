@@ -6,12 +6,15 @@ const _ = require('lodash')
     , pathlib = require('path')
     , Promise = require('bluebird')
     , search = require('./search')
+    , header = require('./header')
 
 async function load( {
   data,
   file,
   root,
-  include
+  include,
+  version,
+  type
 } ) {
   root = root || process.cwd()
 
@@ -21,13 +24,15 @@ async function load( {
 
   if ( file ) {
     include = [ pathlib.dirname( file ) ].concat( include )
+    file = pathlib.resolve( root, file )
   }
+
 
   include = include.filter( ( inc ) => !!inc )
 
-  var loadingFiles = {}
-  var error
+  var error = null
   var lines
+  var watch = []
 
   if ( data )
     lines = await loadData( data )
@@ -42,20 +47,23 @@ async function load( {
   if ( file )
     file = pathlib.relative( root, file )
 
+  watch = watch.map( ( file ) => pathlib.relative( root, file ) )
 
+  data = header( { data, version, type } )
 
   return {
     root,
     file,
     error,
+    watch,
     data
   }
 
   async function loadFile( file ) {
-    if ( loadingFiles[file] )
-      return ''
+    if ( watch.includes( file ) )
+      return []
 
-    loadingFiles[file] = true
+    watch.push( file )
 
     try {
       var data = await fs.readFile( file, 'utf8' )

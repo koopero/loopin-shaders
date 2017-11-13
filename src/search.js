@@ -54,10 +54,6 @@ search.byInclude = async function byInclude( {
     if ( await checkFile( tryFile ) )
       return tryFile
   }
-
-  // const resolveRoot = pathlib.resolve.bind( pathlib, root || process.cwd() )
-  //
-  // return resolveRoot( file )
 }
 
 function extensions( type, version ) {
