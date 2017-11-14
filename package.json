@@ -1,6 +1,6 @@
 {
-  "name": "loopin-shader",
-  "version": "0.1.0",
+  "name": "loopin-shaders",
+  "version": "0.1.1",
   "description": "Shader management for Loopin",
   "main": "src/plugin.js",
   "scripts": {
