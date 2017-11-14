@@ -79,7 +79,7 @@ async function load( {
     let lines = data.split( /\r?\n/ )
     lines = await Promise.map( lines, async ( line ) => {
       let match
-      if ( match = /\#include [\'\"](.*?)[\'\"]/.exec( line ) ) {
+      if ( match = /^\#include [\'\"](.*?)[\'\"]/.exec( line ) ) {
         let includeFile = match[1]
         includeFile = await search.byInclude( {
           file: includeFile, root, include
