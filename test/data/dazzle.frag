@@ -2,27 +2,11 @@
 
 #include "ofxLoopin/clock.glsl"
 #include "ofxLoopin/src.glsl"
-
+#include "noise.glsl"
 
 #ifdef SHADER_TYPE_VERT
-/*
-  Matrix and mesh supplied by openframeworks.
-*/
-uniform mat4 modelViewProjectionMatrix;
-in vec4 position;
-in vec2 texcoord;
-in vec4 color;
-in vec4 normal;
+#include "ofxLoopin/vert.glsl"
 
-/*
-  Outputs supplied to fragment shader by loopin convention.
-*/
-out vec2 srcCoord;
-out vec4 vertColour;
-
-/*
-  The actual vertex shader.
-*/
 void main()
 {
   // Use supplied texture coordinates.
@@ -31,7 +15,7 @@ void main()
   srcCoord = (srcMatrix*vec4(srcCoord.x,srcCoord.y,0,1)).xy;
 
   // Default to multiplying by white.
-  vertColour = vec4(0.25,0,1,1);
+  vertColour = COLOUR;
 
   vec4 pos = position;
   pos.xy *= 0.5;
@@ -40,11 +24,7 @@ void main()
 #endif
 
 #ifdef SHADER_TYPE_FRAG
-/*
-  Inputs supplied by vertex shader by loopin convention.
-*/
-in vec2 srcCoord;
-in vec4 vertColour;
+#include "ofxLoopin/frag.glsl"
 
 /*
   Default output.
@@ -57,6 +37,7 @@ out vec4 outputColour;
 void main()
 {
   outputColour = texture(srcSampler, srcCoord);
-  outputColour += vertColour;
+  outputColour += vertColour * vec4( 0.3, 0.3, 0.5, 1.0 );
+  outputColour.r = noise( vec3( srcCoord.x, srcCoord.y, clockTime ) * vec3( 20, 20, 0.25 ) );
 }
 #endif
