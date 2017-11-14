@@ -2,8 +2,7 @@ module.exports = loopinShaders
 
 const _ = require('lodash')
     , config = require('./config')
-    , search = require('./search')
-    , load = require('./load')
+    , Shader = require('./shader')
     , H = require('horten')
     , Promise = require('bluebird')
     , pathlib = require('path')
@@ -11,19 +10,28 @@ const _ = require('lodash')
 const moduleShaderDir = pathlib.resolve( __dirname, '..', 'shader' )
 
 function loopinShaders( {
-  dir = 'shader/'
+  dir = 'shader/',
+  watch = true
 }) {
   const loopin = this
+      , shaders = {}
 
   loopin.plugin('read')
   loopin.plugin('files')
 
   let root = loopin.filesAbsolute( dir )
+  let include = [ root, moduleShaderDir ]
 
   loopin.shaderVersion = shaderVersion
   loopin.dispatchListen( 'shaderInit', onShaderInit )
 
 
+  function shader( name ) {
+    if ( !shaders[name] )
+      shaders[name] = new Shader( { name, loopin, root, include } )
+
+    return shaders[name]
+  }
 
 
 
@@ -38,40 +46,15 @@ function loopinShaders( {
     return _shaderVersion
   }
 
-  function onShaderInit( event ) {
+  async function onShaderInit( event ) {
     let key = event.path.split('/')[1]
+    let version = await shaderVersion()
 
     if ( key ) {
-      shaderLoad( { name: key } )
+      shader( key ).version = version
+      shader( key ).load()
+      if ( watch )
+        shader( key ).watch()
     }
   }
-
-  async function shaderLoad( { name } ) {
-    console.log( root, name )
-    let version = await shaderVersion()
-    let shader = await search.byName( {
-      root, version, name
-    })
-
-    shader = _.mapValues( shader, ( element, type ) => {
-      if ( element.file )
-        return load( {
-          file: element.file,
-          type,
-          version,
-          root,
-          include: [ moduleShaderDir ]
-        } )
-    })
-
-    shader = await Promise.props( shader )
-
-    let patch = _.mapValues( shader, element => _.pick( element, ['data'] ) )
-
-    loopin.patch( patch, 'shader/'+name )
-
-    console.log( shader )
-
-  }
-
 }
