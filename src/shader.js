@@ -40,7 +40,6 @@ class Shader extends EventEmitter {
     let shader = await search.byName( {
       root, version, name
     })
-    console.log( shader )
 
     shader = _.mapValues( shader, ( element, type ) => {
       if ( element && element.file )

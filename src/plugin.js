@@ -12,7 +12,7 @@ const moduleShaderDir = pathlib.resolve( __dirname, '..', 'shader' )
 function loopinShaders( {
   dir = 'shader/',
   watch = true
-}) {
+} = {} ) {
   const loopin = this
       , shaders = {}
 
@@ -24,6 +24,7 @@ function loopinShaders( {
 
   loopin.shaderVersion = shaderVersion
   loopin.dispatchListen( 'shaderInit', onShaderInit )
+  loopin.hookAdd('patchMutate', hookPatchMutate )
 
 
   function shader( name ) {
@@ -31,6 +32,11 @@ function loopinShaders( {
       shaders[name] = new Shader( { name, loopin, root, include } )
 
     return shaders[name]
+  }
+
+  async function hookPatchMutate( mutant ) {
+    console.log('hookPatchMutate', mutant.get() )
+    await Promise.delay( 3000 )
   }
 
 
