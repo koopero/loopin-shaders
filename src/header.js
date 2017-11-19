@@ -4,8 +4,11 @@ function header( { data, version, type } ) {
 
 
   let header = ''
-  header += `#version ${version}\n`
-  header += `#define SHADER_TYPE_${type.toUpperCase()}\n`
+  if ( version )
+    header += `#version ${version}\n`
+
+  if ( type )
+    header += `#define SHADER_TYPE_${type.toUpperCase()} 1\n`
 
   data = data.replace( /^\#version.*\r?\n/m, '' )
 

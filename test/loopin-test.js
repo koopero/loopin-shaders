@@ -4,10 +4,21 @@ const _ = require('lodash')
     , pathlib = require('path')
     , resolveData = pathlib.resolve.bind( pathlib, __dirname, 'data' )
 
+const fs = require('fs-extra')
+async function writeRandomGLSL() {
+  let file = resolveData( 'random.glsl' )
+  let number = _.random( 1, 8000 ) / 8
+  let data = `const int RANDOM = ${number}; // Chosen by fair dice roll`
+
+  await fs.outputFile( file, data )
+
+  return String( number )
+}
+
 describe('in loopin', () => {
   var loopin
   beforeEach( () => {
-    loopin = require('loopin')()
+    loopin = Loopin()
     loopin.plugin('files')
     loopin.logShow('patch')
     loopin.filesRoot( resolveData() )
@@ -20,13 +31,14 @@ describe('in loopin', () => {
     return loopin.bootstrap()
   })
 
-  xit( 'will get version', () => {
+  it( 'will get version', () => {
     let result = loopin.shaderVersion()
+    let version = expectedVersion()
     return Promise.resolve( result )
     .then( ( result ) => assert.equal( result, '150' ) )
   })
 
-  xit( 'will send event when shader is initialized', ( cb ) => {
+  it( 'will send event when shader is initialized', ( cb ) => {
     loopin.patch( 'dazzle', 'render/foo/shader' )
 
     let calls = 0
@@ -43,7 +55,7 @@ describe('in loopin', () => {
     })
   })
 
-  xit( 'will load a shader', async () => {
+  it( 'will load a shader', async () => {
     let shader = 'dazzle'
 
     loopin.patch( shader, 'render/test/shader' )
@@ -55,22 +67,80 @@ describe('in loopin', () => {
     assert.equal( event.type, 'done' )
   })
 
-  it( 'will load a shader from a patch', async ( ) => {
+  it( 'will load a shader from a patch', async () => {
     let path = 'shader/test/'
-    loopin.patch( { vert: 'trivial.glsl' }, path  )
+      , file = 'trivial.glsl'
+      , text = '// hello'
+
+    loopin.patch( { vert: file }, path  )
+
+
     let event = await loopin.dispatchListen(`done::${path}`)
     assert.equal( event.type, 'done' )
 
 
     let status = await loopin.read( path )
-    assert.deepEqual( status, {
+    assert( status.vert.data.includes( text ))
+  })
 
-    })
+  it( 'will load a shader from a patched name', async () => {
+    let path = 'shader/test/'
+      , name = 'dazzle'
+      , text = '// keyword dazzle'
+
+
+    loopin.patch( { vert: name }, path  )
+
+
+    let event = await loopin.dispatchListen(`done::${path}`)
+    assert.equal( event.type, 'done' )
+
+
+    let status = await loopin.read( path )
+    assert( status.vert.data.includes( text ))
+  })
+
+
+  it( 'will watch file from patch', async () => {
+    let path = 'shader/test/'
+      , name = 'random'
+
+    await writeRandomGLSL()
+
+
+    loopin.patch( { vert: name }, path  )
+    await loopin.dispatchListen(`done::${path}`)
+
+    // arbitrary cooldown
+    await loopin.Promise.delay( 400 )
+
+    let text = await writeRandomGLSL()
+    await loopin.dispatchListen(`done::${path}`)
+
+
+    let status = await loopin.read( path )
+    assert( status.vert.data.includes( text ))
 
   })
+
 
   afterEach( () => {
     return loopin.close()
   })
 
 })
+
+function expectedVersion() {
+  let arch = require('os').arch()
+  switch ( arch ) {
+    case 'arm':
+    case 'arm64':
+      return 'es'
+
+    case 'x64':
+    case 'x86':
+      return '150'
+  }
+
+  throw new Error(`Test error, arch ${arch} not supported`)
+}
