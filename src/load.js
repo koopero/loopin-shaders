@@ -36,18 +36,22 @@ async function load( {
     lines = await loadFile( file )
   else if ( name )
     lines = await loadName( name )
-  else
-    throw new Error('no input')
 
-  lines = _.flatten( lines )
-  data = lines.join( os.EOL )
+  if ( lines ) {
+    lines = _.flatten( lines )
+    data = lines.join( os.EOL )
+  }
 
-  if ( file )
+  if ( file ) {
+    file = pathlib.resolve( root, file )
     file = pathlib.relative( root, file )
+  }
 
   watch = watch.map( ( file ) => pathlib.relative( root, file ) )
 
-  data = header( { data, version, type } )
+  if ( data ) {
+    data = header( { data, version, type } )
+  }
 
   return {
     root,
@@ -60,9 +64,11 @@ async function load( {
   async function loadName( name ) {
     let shader = await search.byName( { name, root, types: [ type ], version } )
     let element = shader[type]
-    
-    file = element.file
-    return loadFile( element.file )
+
+    if ( element && element.file ) {
+      file = element.file
+      return loadFile( element.file )
+    }
   }
 
   async function loadFile( file ) {
