@@ -1,6 +1,7 @@
 const _ = require('lodash')
     , search = require('./search')
     , load = require('./load')
+    , parse = require('./parse')
     , config = require('./config')
     , Promise = require('bluebird')
     , pathlib = require('path')
@@ -30,41 +31,83 @@ class Shader extends EventEmitter {
       value: include,
       enumerable: true
     })
-    debounce = parseInt( debounce ) || 250
+
+    debounce = parseInt( debounce ) || 80
     this._onWatch = _.debounce( this.onWatch.bind( this ), debounce )
   }
 
-  async load() {
-    this.unwatch()
-    let { name, root, loopin, include, version } = this
-    let shader = await search.byName( {
-      root, version, name
-    })
-    console.log( shader )
+  async patchData( delta ) {
+    let { root, loopin, include } = this
+    let version = await loopin.shaderVersion()
 
-    shader = _.mapValues( shader, ( element, type ) => {
-      if ( element && element.file )
-        return load( {
-          file: element.file,
-          type,
-          version,
-          root,
-          include
-        } )
-    })
+    delta = parse( delta )
+
+    let shader = _.mapValues( delta, ( element, type ) =>
+      load( Object.assign(
+        { type, version, root, include },
+        element
+      ) )
+    )
 
     shader = await Promise.props( shader )
+
     _.extend( this, shader )
 
-    let patch = _.mapValues( shader, element => _.pick( element, ['data'] ) )
+    return _.mapValues( shader, element => _.pick( element, ['data'] ) )
+  }
 
-    loopin.patch( patch, 'shader/'+name )
+  async load() {
+    let { loopin, name } = this
+    let existing = {}
+    config.types.map( type => existing[type] = this[type] || null )
+
+    existing = _.mapValues( existing, ( element, type ) => {
+      if ( element && element.file )
+        return { file: element.file }
+
+      if ( element && element.data )
+        return { data: element.data }
+
+      if ( element && element.name )
+        return { name: element.name }
+
+      return { name }
+    } )
+
+    console.log( 'load', existing )
+
+    await loopin.patch( existing, `shader/${name}` )
+  }
+
+  async patch( delta ) {
+    let { loopin, name } = this
+    delta = await this.patchData( delta )
+    // console.log( 'patch', delta )
+
+    loopin.patch( delta, `shader/${name}` )
+  }
+
+  async loadFromFiles() {
+    let { loopin, name } = this
+    let files = _.mapValues(
+      _.pick( this, config.types ),
+      ( element, type ) => {
+        console.log( element )
+        if ( element.file )
+          return { file: element.file }
+      }
+    )
+
+    console.log( 'loadFromFiles', files )
+
+    await loopin.patch( files, `shader/${name}` )
   }
 
   watch() {
     let { root } = this
 
     this.unwatch()
+
     let files = _.map( _.pick( this, config.types ), ( element ) => element.watch )
     files = _.flatten( files )
     files = _.filter( files )
@@ -74,13 +117,13 @@ class Shader extends EventEmitter {
       file => fs.watch( file, { persistent: false }, this._onWatch )
     )
 
-    // console.log( 'watching', files )
+    console.log( 'watching', files )
 
   }
 
   onWatch( event ) {
-    // console.log( 'onWatch', arguments )
-    this.load()
+    console.log( 'onWatch', arguments )
+    return this.loadFromFiles()
   }
 
   unwatch() {

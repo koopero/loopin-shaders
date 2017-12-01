@@ -1,4 +1,5 @@
 #version 150
+// keyword dazzle
 
 #include "ofxLoopin/clock.glsl"
 #include "ofxLoopin/src.glsl"
@@ -15,7 +16,7 @@ void main()
   srcCoord = (srcMatrix*vec4(srcCoord.x,srcCoord.y,0,1)).xy;
 
   // Default to multiplying by white.
-  vertColour = COLOUR;
+  vertColour = vec4(1,1,1,1);
 
   vec4 pos = position;
   pos.xy *= 0.5;

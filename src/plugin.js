@@ -12,8 +12,9 @@ const moduleShaderDir = pathlib.resolve( __dirname, '..', 'shader' )
 function loopinShaders( {
   dir = 'shader/',
   watch = true
-}) {
+} = {} ) {
   const loopin = this
+      , Promise = loopin.Promise
       , shaders = {}
 
   loopin.plugin('read')
@@ -22,15 +23,42 @@ function loopinShaders( {
   let root = loopin.filesAbsolute( dir )
   let include = [ root, moduleShaderDir ]
 
+  loopin.shader = shader
   loopin.shaderVersion = shaderVersion
-  loopin.dispatchListen( 'shaderInit', onShaderInit )
+  loopin.dispatchListen( 'need', onNeed )
+  loopin.hookAdd('patchMutate', hookPatchMutate )
 
 
-  function shader( name ) {
+  function shader( name, delta ) {
     if ( !shaders[name] )
-      shaders[name] = new Shader( { name, loopin, root, include } )
+      shaders[name] = new Shader( { loopin, root, include, name } )
+
+    if ( delta )
+      shaders[name].patch( delta )
 
     return shaders[name]
+  }
+
+  async function hookPatchMutate( mutant ) {
+    let path = 'shader/'
+      , delta = mutant.get( path )
+
+    if ( !delta )  return
+
+    data = _.mapValues( delta, async function ( delta, name ) {
+      let shader = loopin.shader( name )
+        , result = await shader.patchData( delta )
+
+      if ( watch )
+        shader.watch()
+      else
+        shader.unwatch()
+
+      return result
+    } )
+    data = await Promise.props( data )
+
+    mutant.set( data, path )
   }
 
 
@@ -46,7 +74,13 @@ function loopinShaders( {
     return _shaderVersion
   }
 
-  async function onShaderInit( event ) {
+  async function onNeed( event ) {
+    let base = event.path.split('/')[0]
+    if ( base == 'shader' )
+      return onShaderNeed( event )
+  }
+
+  async function onShaderNeed( event ) {
     let key = event.path.split('/')[1]
     let version = await shaderVersion()
 

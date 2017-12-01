@@ -1,3 +1,6 @@
 .AppleDouble
 node_modules/
+package-lock.json
 yarn.lock
+
+/test/data/random.glsl

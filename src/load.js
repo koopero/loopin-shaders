@@ -11,6 +11,7 @@ const _ = require('lodash')
 async function load( {
   data,
   file,
+  name,
   root,
   include,
   version,
@@ -20,11 +21,6 @@ async function load( {
 
   if ( !Array.isArray( include ) ) {
     include = [ include ]
-  }
-
-  if ( file ) {
-    include = [ pathlib.dirname( file ) ].concat( include )
-    file = pathlib.resolve( root, file )
   }
 
 
@@ -38,18 +34,24 @@ async function load( {
     lines = await loadData( data )
   else if ( file )
     lines = await loadFile( file )
-  else
-    throw new Error('no input')
+  else if ( name )
+    lines = await loadName( name )
 
-  lines = _.flatten( lines )
-  data = lines.join( os.EOL )
+  if ( lines ) {
+    lines = _.flatten( lines )
+    data = lines.join( os.EOL )
+  }
 
-  if ( file )
+  if ( file ) {
+    file = pathlib.resolve( root, file )
     file = pathlib.relative( root, file )
+  }
 
   watch = watch.map( ( file ) => pathlib.relative( root, file ) )
 
-  data = header( { data, version, type } )
+  if ( data ) {
+    data = header( { data, version, type } )
+  }
 
   return {
     root,
@@ -59,7 +61,22 @@ async function load( {
     data
   }
 
+  async function loadName( name ) {
+    let shader = await search.byName( { name, root, types: [ type ], version } )
+    let element = shader[type]
+
+    if ( element && element.file ) {
+      file = element.file
+      return loadFile( element.file )
+    }
+  }
+
   async function loadFile( file ) {
+    if ( !include.includes( pathlib.dirname( file ) ) )
+      include = [ pathlib.dirname( file ) ].concat( include )
+
+    file = pathlib.resolve( root, file )
+
     if ( watch.includes( file ) )
       return []
 
