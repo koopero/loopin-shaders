@@ -36,6 +36,9 @@ config.extensions = function extensions( {
 
 
 config.infoToShaderVersion = function ( info ) {
+
+  if ( _.get(info,'window.gl.ES') ) return 'es'
+
   let VersionMajor = _.get( info, 'window.gl.VersionMajor') || 0
   let VersionMinor = _.get( info, 'window.gl.VersionMinor') || 0
   let version = String( VersionMajor ) + String( VersionMinor )
