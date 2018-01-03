@@ -48,6 +48,7 @@ function loopinShaders( {
     data = _.mapValues( delta, async function ( delta, name ) {
       let shader = loopin.shader( name )
         , result = await shader.patchData( delta )
+      console.log( 'hookPatchMutate', name, delta, result )
 
       if ( watch )
         shader.watch()

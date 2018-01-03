@@ -8,7 +8,7 @@ const fs = require('fs-extra')
 async function writeRandomGLSL() {
   let file = resolveData( 'random.glsl' )
   let number = _.random( 1, 8000 ) / 8
-  let data = `const int RANDOM = ${number}; // Chosen by fair dice roll`
+  let data = `const float RANDOM = ${number}; // Chosen by fair dice roll`
 
   await fs.outputFile( file, data )
 

@@ -72,6 +72,7 @@ async function load( {
   }
 
   async function loadFile( file ) {
+    console.warn( 'loadFile', file, 'that was the file' )
     if ( !include.includes( pathlib.dirname( file ) ) )
       include = [ pathlib.dirname( file ) ].concat( include )
 
@@ -97,12 +98,17 @@ async function load( {
     lines = await Promise.map( lines, async ( line ) => {
       let match
       if ( match = /^\#include [\'\"](.*?)[\'\"]/.exec( line ) ) {
-        let includeFile = match[1]
-        includeFile = await search.byInclude( {
-          file: includeFile, root, include
+        let query = match[1]
+        let includeFile = await search.byInclude( {
+          file: query, root, include: include.concat( alsoInclude )
         } )
 
-        line = await loadFile( includeFile )
+        console.log('loadData', query, includeFile, include )
+
+        if ( includeFile )
+          line = await loadFile( includeFile )
+        else
+          line = null
       }
 
       return line

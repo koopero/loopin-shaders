@@ -50,9 +50,12 @@ search.byInclude = async function byInclude( {
 
   for ( let index in include ) {
     let tryFile = pathlib.resolve( include[index], file )
-
+    console.warn( 'tryFile', tryFile )
     if ( await checkFile( tryFile ) )
       return tryFile
+
+    console.warn( 'tryFile', 'nope' )
+
   }
 }
 
