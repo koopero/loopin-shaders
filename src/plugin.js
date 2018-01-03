@@ -7,6 +7,8 @@ const _ = require('lodash')
     , Promise = require('bluebird')
     , pathlib = require('path')
 
+
+const debug = ()=>0
 const moduleShaderDir = pathlib.resolve( __dirname, '..', 'shader' )
 
 function loopinShaders( {
@@ -27,6 +29,7 @@ function loopinShaders( {
   loopin.shaderVersion = shaderVersion
   loopin.dispatchListen( 'need', onNeed )
   loopin.hookAdd('patchMutate', hookPatchMutate )
+  loopin.hookAdd('close', onClose )
 
 
   function shader( name, delta ) {
@@ -48,7 +51,7 @@ function loopinShaders( {
     data = _.mapValues( delta, async function ( delta, name ) {
       let shader = loopin.shader( name )
         , result = await shader.patchData( delta )
-      console.log( 'hookPatchMutate', name, delta, result )
+      debug( 'hookPatchMutate', name, delta, result )
 
       if ( watch )
         shader.watch()
@@ -91,5 +94,10 @@ function loopinShaders( {
       if ( watch )
         shader( key ).watch()
     }
+  }
+
+  function onClose() {
+    debug('onClose')
+    _.map( shaders, shader => shader.unwatch() )
   }
 }

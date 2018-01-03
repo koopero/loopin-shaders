@@ -1,19 +1,11 @@
-const _ = require('lodash')
+const test = require('./test')
+    , _ = require('lodash')
     , Loopin = require('loopin')
     , assert = require('chai').assert
     , pathlib = require('path')
     , resolveData = pathlib.resolve.bind( pathlib, __dirname, 'data' )
 
-const fs = require('fs-extra')
-async function writeRandomGLSL() {
-  let file = resolveData( 'random.glsl' )
-  let number = _.random( 1, 8000 ) / 8
-  let data = `const float RANDOM = ${number}; // Chosen by fair dice roll`
 
-  await fs.outputFile( file, data )
-
-  return String( number )
-}
 
 describe('in loopin', () => {
   var loopin
@@ -33,9 +25,9 @@ describe('in loopin', () => {
 
   it( 'will get version', () => {
     let result = loopin.shaderVersion()
-    let version = expectedVersion()
+    let version = test.platformVersion()
     return Promise.resolve( result )
-    .then( ( result ) => assert.equal( result, '150' ) )
+    .then( ( result ) => assert.equal( result, version ) )
   })
 
   it( 'will send event when shader is initialized', ( cb ) => {
@@ -105,7 +97,7 @@ describe('in loopin', () => {
     let path = 'shader/test/'
       , name = 'random'
 
-    await writeRandomGLSL()
+    await test.writeRandomGLSL()
 
 
     loopin.patch( { vert: name }, path  )
@@ -114,7 +106,7 @@ describe('in loopin', () => {
     // arbitrary cooldown
     await loopin.Promise.delay( 400 )
 
-    let text = await writeRandomGLSL()
+    let text = await test.writeRandomGLSL()
     await loopin.dispatchListen(`done::${path}`)
 
 
@@ -130,17 +122,4 @@ describe('in loopin', () => {
 
 })
 
-function expectedVersion() {
-  let arch = require('os').arch()
-  switch ( arch ) {
-    case 'arm':
-    case 'arm64':
-      return 'es'
 
-    case 'x64':
-    case 'x86':
-      return '150'
-  }
-
-  throw new Error(`Test error, arch ${arch} not supported`)
-}

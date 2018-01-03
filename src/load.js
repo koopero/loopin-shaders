@@ -8,6 +8,8 @@ const _ = require('lodash')
     , search = require('./search')
     , header = require('./header')
 
+const debug = ()=>0
+
 async function load( {
   data,
   file,
@@ -72,7 +74,7 @@ async function load( {
   }
 
   async function loadFile( file ) {
-    console.warn( 'loadFile', file, 'that was the file' )
+    debug( 'loadFile', file, 'that was the file' )
     if ( !include.includes( pathlib.dirname( file ) ) )
       include = [ pathlib.dirname( file ) ].concat( include )
 
@@ -103,7 +105,7 @@ async function load( {
           file: query, root, include: include.concat( alsoInclude )
         } )
 
-        console.log('loadData', query, includeFile, include )
+        debug('loadData', query, includeFile, include )
 
         if ( includeFile )
           line = await loadFile( includeFile )

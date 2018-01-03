@@ -7,6 +7,8 @@ const _ = require('lodash')
     , pathlib = require('path')
     , fs = require('fs')
 
+const debug = ()=>0
+
 
 const EventEmitter = require('events')
 
@@ -50,12 +52,12 @@ class Shader extends EventEmitter {
 
     let shader = _.mapValues( delta, async ( element, type ) => {
       if ( config.types.includes( type ) ) {
-        console.log( 'load', element )
+        debug( 'load', element )
         let loaded = await load( Object.assign(
           { type, version, root, include },
           element
         ) )
-        console.log( 'loaded', loaded )
+        debug( 'loaded', loaded )
         return loaded
 
       }
@@ -86,7 +88,7 @@ class Shader extends EventEmitter {
       return { name }
     } )
 
-    console.log( 'load', existing )
+    debug( 'load', existing )
 
     await loopin.patch( existing, `shader/${name}` )
   }
@@ -94,7 +96,7 @@ class Shader extends EventEmitter {
   async patch( delta ) {
     let { loopin, name } = this
     delta = await this.patchData( delta )
-    // console.log( 'patch', delta )
+    // debug( 'patch', delta )
 
     loopin.patch( delta, `shader/${name}` )
   }
@@ -104,13 +106,13 @@ class Shader extends EventEmitter {
     let files = _.mapValues(
       _.pick( this, config.types ),
       ( element, type ) => {
-        console.log( element )
+        debug( element )
         if ( element.file )
           return { file: element.file }
       }
     )
 
-    console.log( 'loadFromFiles', files )
+    debug( 'loadFromFiles', files )
 
     await loopin.patch( files, `shader/${name}` )
   }
@@ -125,7 +127,7 @@ class Shader extends EventEmitter {
     files = _.filter( files )
     files = _.map( files, file => pathlib.resolve( root, file ) )
     files = _.uniq( files )
-    console.log( 'watching', files )
+    debug( 'watching', files )
 
     this._watchers = _.map( files,
       file => fs.watch( file, { persistent: false }, this._onWatch )
@@ -135,7 +137,7 @@ class Shader extends EventEmitter {
   }
 
   onWatch( event ) {
-    console.log( 'onWatch', arguments )
+    debug( 'onWatch', arguments )
     return this.loadFromFiles()
   }
 
