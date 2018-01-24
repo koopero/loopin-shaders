@@ -17,7 +17,7 @@ function parse( data ) {
     data = ob
   }
 
-  let shader = {}
+  let shader = _.clone( data )
 
   config.types.map( function eachType( type ) {
     let value = _.isObject( data ) ? data[type] : data

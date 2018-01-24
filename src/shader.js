@@ -7,6 +7,8 @@ const _ = require('lodash')
     , pathlib = require('path')
     , fs = require('fs')
 
+const debug = ()=>0
+
 
 const EventEmitter = require('events')
 
@@ -39,21 +41,33 @@ class Shader extends EventEmitter {
   async patchData( delta ) {
     let { root, loopin, include } = this
     let version = await loopin.shaderVersion()
+    let leftovers = {}
 
+    if ( _.isObject( delta ) ) {
+      leftovers = _.pickBy( delta, ( v, k ) => !config.types.includes( k ) )
+      delta = _.pick( delta, config.types )
+    }
     delta = parse( delta )
 
-    let shader = _.mapValues( delta, ( element, type ) =>
-      load( Object.assign(
-        { type, version, root, include },
-        element
-      ) )
-    )
+
+    let shader = _.mapValues( delta, async ( element, type ) => {
+      if ( config.types.includes( type ) ) {
+        debug( 'load', element )
+        let loaded = await load( Object.assign(
+          { type, version, root, include },
+          element
+        ) )
+        debug( 'loaded', loaded )
+        return loaded
+
+      }
+    } )
 
     shader = await Promise.props( shader )
 
     _.extend( this, shader )
 
-    return _.mapValues( shader, element => _.pick( element, ['data'] ) )
+    return _.extend( leftovers, _.mapValues( shader, element => _.pick( element, ['data'] ) ) )
   }
 
   async load() {
@@ -74,7 +88,7 @@ class Shader extends EventEmitter {
       return { name }
     } )
 
-    console.log( 'load', existing )
+    debug( 'load', existing )
 
     await loopin.patch( existing, `shader/${name}` )
   }
@@ -82,7 +96,7 @@ class Shader extends EventEmitter {
   async patch( delta ) {
     let { loopin, name } = this
     delta = await this.patchData( delta )
-    // console.log( 'patch', delta )
+    // debug( 'patch', delta )
 
     loopin.patch( delta, `shader/${name}` )
   }
@@ -92,13 +106,13 @@ class Shader extends EventEmitter {
     let files = _.mapValues(
       _.pick( this, config.types ),
       ( element, type ) => {
-        console.log( element )
+        debug( element )
         if ( element.file )
           return { file: element.file }
       }
     )
 
-    console.log( 'loadFromFiles', files )
+    debug( 'loadFromFiles', files )
 
     await loopin.patch( files, `shader/${name}` )
   }
@@ -108,27 +122,28 @@ class Shader extends EventEmitter {
 
     this.unwatch()
 
-    let files = _.map( _.pick( this, config.types ), ( element ) => element.watch )
+    let files = _.map( _.pick( this, config.types ), ( element ) => element && element.watch )
     files = _.flatten( files )
     files = _.filter( files )
     files = _.map( files, file => pathlib.resolve( root, file ) )
     files = _.uniq( files )
+    debug( 'watching', files )
+
     this._watchers = _.map( files,
       file => fs.watch( file, { persistent: false }, this._onWatch )
     )
 
-    console.log( 'watching', files )
 
   }
 
   onWatch( event ) {
-    console.log( 'onWatch', arguments )
+    debug( 'onWatch', arguments )
     return this.loadFromFiles()
   }
 
   unwatch() {
     this._onWatch.cancel()
-    _.map( this._watchers, ( watcher ) => watcher.close() )
+    _.map( this._watchers, ( watcher ) => watcher && watcher.close() )
     this._watchers = []
   }
 

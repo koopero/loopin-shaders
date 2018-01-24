@@ -3,6 +3,7 @@ const search = exports
 const pathlib = require('path')
     , fs = require('fs-extra')
 
+const debug = ()=>0
 
 search.byName = async function byName( {
   name,
@@ -43,16 +44,21 @@ search.byInclude = async function byInclude( {
   include,
 } ) {
   root = root || process.cwd()
-  include = include.map( ( inc ) => pathlib.resolve( root, inc ) )
+
+  debug('include', include )
+  include = include.filter( inc=>!!inc ).map( ( inc ) => pathlib.resolve( root, inc ) )
 
   if ( include.indexOf( root ) == -1 )
     include.push( root )
 
   for ( let index in include ) {
     let tryFile = pathlib.resolve( include[index], file )
-
+    debug( 'tryFile', tryFile )
     if ( await checkFile( tryFile ) )
       return tryFile
+
+    debug( 'tryFile', 'nope' )
+
   }
 }
 
