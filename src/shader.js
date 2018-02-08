@@ -130,19 +130,15 @@ class Shader extends EventEmitter {
     files = _.map( files, file => pathlib.resolve( root, file ) )
     files = _.uniq( files )
     this._watchers = _.filter( _.map( files,
-      async function ( file ) {
+      function ( file ) {
         try {
-          return await nodeWatch( file, { persistent: false }, self._onWatch )
+          return nodeWatch( file, { persistent: false }, self._onWatch )
         } catch( err ) {
           // If we can't watch, do we really care?
           // loopin.log('watchError', `shader/${name}`, { file: file, err: err.mesg } )
         }
       }
     ) )
-
-
-    // console.log( 'watching', files )
-
   }
 
   onWatch( event ) {
