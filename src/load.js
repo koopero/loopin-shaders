@@ -17,7 +17,8 @@ async function load( {
   root,
   include,
   version,
-  type
+  type,
+  warn = console.warn
 } ) {
   root = root || process.cwd()
 
@@ -38,10 +39,11 @@ async function load( {
     lines = await loadFile( file )
   else if ( name )
     lines = await loadName( name )
+  else if ( warn )
+    warn( "No input specified.")
 
   if ( lines ) {
-    lines = _.flatten( lines )
-    data = lines.join( os.EOL )
+    data = _.flattenDeep( lines )
   }
 
   if ( file ) {
@@ -50,6 +52,9 @@ async function load( {
   }
 
   watch = watch.map( ( file ) => pathlib.relative( root, file ) )
+
+  if ( data && _.isArray( data ) )
+    data = data.join( os.EOL )
 
   if ( data ) {
     data = header( { data, version, type } )
