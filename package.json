@@ -13,7 +13,12 @@
   "license": "MIT",
   "devDependencies": {
     "chai": "^4.1.2",
-    "mocha": "^4.0.1"
+    "mocha": "^4.0.1",
+    "loopin": "^0.8.1",
+    "loopin-native": "^0.8.1"
+  },
+  "peerDependencies": {
+    "loopin": "^0.8.x"
   },
   "dependencies": {
     "bluebird": "^3.5.1",

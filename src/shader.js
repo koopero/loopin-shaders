@@ -6,6 +6,7 @@ const _ = require('lodash')
     , Promise = require('bluebird')
     , pathlib = require('path')
     , fs = require('fs')
+    , nodeWatch = require('node-watch')
 
 const debug = ()=>0
 
@@ -118,7 +119,8 @@ class Shader extends EventEmitter {
   }
 
   watch() {
-    let { root } = this
+    let self = this
+    let { root, loopin, name } = this
 
     this.unwatch()
 
@@ -127,13 +129,16 @@ class Shader extends EventEmitter {
     files = _.filter( files )
     files = _.map( files, file => pathlib.resolve( root, file ) )
     files = _.uniq( files )
-    debug( 'watching', files )
-
-    this._watchers = _.map( files,
-      file => fs.watch( file, { persistent: false }, this._onWatch )
-    )
-
-
+    this._watchers = _.filter( _.map( files,
+      function ( file ) {
+        try {
+          return nodeWatch( file, { persistent: false }, self._onWatch )
+        } catch( err ) {
+          // If we can't watch, do we really care?
+          // loopin.log('watchError', `shader/${name}`, { file: file, err: err.mesg } )
+        }
+      }
+    ) )
   }
 
   onWatch( event ) {
