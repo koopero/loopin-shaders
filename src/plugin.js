@@ -27,10 +27,10 @@ function loopinShaders( {
 
   loopin.shader = shader
   loopin.shaderVersion = shaderVersion
+  loopin.shaderInclude = include
   loopin.dispatchListen( 'need', onNeed )
   loopin.hookAdd('patchMutate', hookPatchMutate )
   loopin.hookAdd('close', onClose )
-
 
   function shader( name, delta ) {
     if ( !shaders[name] )
@@ -41,6 +41,7 @@ function loopinShaders( {
 
     return shaders[name]
   }
+
 
   async function hookPatchMutate( mutant ) {
     let path = 'shader/'
