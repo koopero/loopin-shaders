@@ -4,7 +4,8 @@ function header( { data, version, type } ) {
 
   let header = ''
   if ( version ) {
-    header += `#version ${version}\n`
+    if ( version != 'es' )
+      header += `#version ${version}\n`
     header += `#define SHADER_VERSION_${version.toUpperCase()} 1\n`
   }
 
