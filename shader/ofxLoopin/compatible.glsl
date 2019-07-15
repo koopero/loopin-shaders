@@ -9,7 +9,7 @@ out vec4 OUT;
 #endif
 #endif
 #ifdef SHADER_VERSION_ES
-#define Texture texture2d
+#define Texture texture2D
 #define Var varying
 #ifdef SHADER_TYPE_FRAG 
 #define OUT gl_FragColor
