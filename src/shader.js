@@ -6,9 +6,10 @@ const _ = require('lodash')
     , Promise = require('bluebird')
     , pathlib = require('path')
     , fs = require('fs')
-    , nodeWatch = require('node-watch')
+    , chokidar = require('chokidar')
 
-const debug = ()=>0
+const debug = console.error
+// const debug = ()=>0
 
 
 const EventEmitter = require('events')
@@ -124,6 +125,11 @@ class Shader extends EventEmitter {
 
     this.unwatch()
 
+    let watchOptions = {
+      persistent: false,
+      usePolling: true,
+    }
+
     let files = _.map( _.pick( this, config.types ), ( element ) => element && element.watch )
     files = _.flatten( files )
     files = _.filter( files )
@@ -131,12 +137,15 @@ class Shader extends EventEmitter {
     files = _.uniq( files )
     this._watchers = _.filter( _.map( files,
       function ( file ) {
-        try {
-          return nodeWatch( file, { persistent: false }, self._onWatch )
-        } catch( err ) {
+        // try {
+          debug('watching', file )
+          let watcher = chokidar.watch( file, watchOptions )
+          watcher.on('change', self._onWatch )
+          return watcher
+        // } catch( err ) {
           // If we can't watch, do we really care?
           // loopin.log('watchError', `shader/${name}`, { file: file, err: err.mesg } )
-        }
+        // }
       }
     ) )
   }
