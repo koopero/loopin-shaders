@@ -8,8 +8,8 @@ const _ = require('lodash')
     , fs = require('fs')
     , chokidar = require('chokidar')
 
-const debug = console.error
-// const debug = ()=>0
+// const debug = console.error
+const debug = ()=>0
 
 
 const EventEmitter = require('events')
