@@ -26,7 +26,6 @@ async function load( {
     include = [ include ]
   }
 
-
   include = include.filter( ( inc ) => !!inc )
 
   var error = null

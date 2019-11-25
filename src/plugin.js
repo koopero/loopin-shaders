@@ -28,6 +28,8 @@ function loopinShaders( {
   loopin.shader = shader
   loopin.shaderVersion = shaderVersion
   loopin.shaderInclude = include
+  loopin.shadersIncludeDir = shadersIncludeDir
+
   loopin.dispatchListen( 'need', onNeed )
   loopin.hookAdd('patchMutate', hookPatchMutate )
   loopin.hookAdd('close', onClose )
@@ -40,6 +42,12 @@ function loopinShaders( {
       shaders[name].patch( delta )
 
     return shaders[name]
+  }
+
+  function shadersIncludeDir( dir ) {
+    dir = loopin.filesAbsolute( dir )
+    console.log( { INKLUDE: dir } )
+    include.push( dir )
   }
 
 
