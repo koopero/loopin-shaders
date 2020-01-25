@@ -4,6 +4,7 @@ const pathlib = require('path')
     , fs = require('fs-extra')
 
 const debug = ()=>0
+// const debug = console.warn
 
 search.byName = async function byName( {
   name,

@@ -1,6 +1,6 @@
 {
   "name": "loopin-shaders",
-  "version": "0.10.1",
+  "version": "0.10.3",
   "description": "Shader management for Loopin",
   "main": "src/plugin.js",
   "bin": {
@@ -15,15 +15,15 @@
     "chai": "^4.1.2",
     "loopin": "^0.9.x",
     "loopin-native": "^0.10.0-beta",
-    "mocha": "^4.0.1"
+    "mocha": "^6.2.0"
   },
   "dependencies": {
     "bluebird": "^3.5.1",
-    "chokidar": "^2.1.2",
-    "fs-extra": "^4.0.2",
+    "fs-extra": "^8.1.0",
     "horten": "^0.9.x",
     "lodash": "^4.17.4",
-    "minimist": "^1.2.0"
+    "minimist": "^1.2.0",
+    "node-watch": "^0.6.3"
   },
   "directories": {
     "test": "test"
